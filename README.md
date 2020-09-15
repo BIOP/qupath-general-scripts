@@ -9,4 +9,5 @@ As these are all rather independent and likely to change and move over time, we 
 
 # Licensing 
 
-All scripts here are probably too simple to copyright and release under a certain license, so unless explicitely specidied, they are considered Public Domain.
+All scripts here are probably too simple to copyright and release under a certain license, so unless explicitely specified, they are considered 
+CC0, or public. We are happy to be thanked if you found the code useful :).
