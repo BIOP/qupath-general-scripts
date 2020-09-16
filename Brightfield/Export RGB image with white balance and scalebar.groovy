@@ -16,13 +16,13 @@
  
 ////// Parameters for export //////
 
-def bg_value = [155, 166, 157] // set to [0,0,0] for no correction
+def bg_value = [219, 219, 219] // set to [0,0,0] for no correction
 
 def downscale = 1
 
 // Scalebar parameters
-def scalebar_um = 40
-def scalebar_height_px = 8
+def scalebar_um = 100
+def scalebar_height_px = 12
 def scalebar_color = "Black"
 
 // Output format
@@ -47,7 +47,7 @@ annotations.eachWithIndex {selected, idx ->
     
     // White balance fix
     IJ.run( image, "RGB Stack", "" )
-    fix_gray.eachWithIndex{ val, c -> 
+    bg_value.eachWithIndex{ val, c -> 
         image.setC( c + 1 )
         IJ.run( image, "Multiply...", "value="+(240/val)+" slice" )
     }
@@ -55,11 +55,11 @@ annotations.eachWithIndex {selected, idx ->
     IJ.run( image, "RGB Color", "" )
     
     
-    IJ.run( image, "Scale Bar...", "width=" + scalebar_um + " height=" + scalebar_height_px + " font=20 color=" + scalebar_color + " background=None location=[Lower Right] bold" )
+    IJ.run( image, "Scale Bar...", "width=" + scalebar_um + " height=" + scalebar_height_px + " font=20 color=" + scalebar_color + " background=None location=[Lower Right] hide bold" )
     
     def file = new File( filePath, image.getTitle()+"_i"+idx )
       
-    IJ.saveAs( image, format, file.getAbsolutePath() )
+    IJ.saveAs( image, image_format, file.getAbsolutePath() )
 }
 
 // Imports used
