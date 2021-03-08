@@ -34,12 +34,12 @@ Due to the simple nature of this code, no copyright is applicable
 */
 
 // USER SETTINGS
-def channel_of_interest = 1 // null to export all the channels 
+def channel_of_interest = 2 // null to export all the channels 
 def downsample = 1
 
 
 // START OF SCRIPT
-
+println("Image: "+getProjectEntry().getImageName())
 def training_regions = getAnnotationObjects().findAll { it.getPathClass() == getPathClass("Training") }
 
 def validation_regions = getAnnotationObjects().findAll { it.getPathClass() == getPathClass("Validation") }
@@ -47,9 +47,6 @@ def validation_regions = getAnnotationObjects().findAll { it.getPathClass() == g
 if (training_regions.size() > 0 ) saveRegions( training_regions, channel_of_interest, downsample, 'train')
 
 if (validation_regions.size() > 0 ) saveRegions( validation_regions, channel_of_interest, downsample, 'test')
-
-
-
 
 
 def saveRegions( def regions, def channel, def downsample, def type ) {
@@ -73,7 +70,7 @@ def saveRegions( def regions, def channel, def downsample, def type ) {
         pathImage = null;
         pathImage = IJExtension.extractROIWithOverlay(server, region, hierarchy, request, false, viewer.getOverlayOptions());
         image = pathImage.getImage()
-        println("Image received" )
+        //println("Image received" )
         //image.show()
         // Create the Labels image
         def labels = IJ.createImage( "Labels", "16-bit black", image.getWidth(), image.getHeight() ,1 );
@@ -82,13 +79,14 @@ def saveRegions( def regions, def channel, def downsample, def type ) {
         IJ.run(image, "To ROI Manager", "")
         
         def rois = rm.getRoisAsArray() as List
-        println("Creating Labels" )
+        //println("Creating Labels" )
         
         def label_ip = labels.getProcessor()
         def idx = 0
+        print( "Ignoring Rectangles: " )
         rois.each{ roi ->
             if (roi.getType() == Roi.RECTANGLE) {
-                println("Ignoring Rectangle")
+                print( "." )
             } else {
                 label_ip.setColor( ++idx )
                 label_ip.setRoi( roi )
@@ -97,13 +95,14 @@ def saveRegions( def regions, def channel, def downsample, def type ) {
 
             }
         }
+        print("\n")
         labels.setProcessor( label_ip )
         
         //labels.show()
         
         // Split to keep only channel of interest
         def output = image
-        if  ( channel != null){
+        if  ( channel != null ){
             imp_chs =  ChannelSplitter.split( image )
             output = imp_chs[  channel - 1 ]
         }
@@ -112,7 +111,7 @@ def saveRegions( def regions, def channel, def downsample, def type ) {
         
         saveImages(output, labels, file_name, type)
                 
-        println( file_name + " Image and Mask Saved." )
+        //println( file_name + " Image and Mask Saved." )
         
         // Save some RAM
         output.close()
