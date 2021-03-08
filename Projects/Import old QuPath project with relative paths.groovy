@@ -24,7 +24,10 @@ def oldProject = GsonTools.getInstance().fromJson( reader, ProjectCommands.Legac
 
 // Replace any instance of {$PROJECT_DIR} with the current project folder
 oldProject.getEntries().each{ entry ->
-    entry.path = entry.path.replace("{\$PROJECT_DIR}", project_directory)
+    if( entry.path.contains( "{\$PROJECT_DIR}" )
+        entry.path = entry.path.replace("{\$PROJECT_DIR}", project_directory)
+    else 
+        println( "Entry did not contain a relative Path" )
 }
 
 println( "Importing the following Images:" )
