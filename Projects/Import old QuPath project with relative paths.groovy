@@ -3,16 +3,17 @@
 // 
 
 def qupath = getQuPath()
-def project = qupath.getProject()
+def new_project = qupath.getProject()
+def new_project_directory = Projects.getBaseDirectory( new_project )
 def title = "Import legacy project with relative paths"
-if (project == null) {
+if ( new_project == null ) {
     Dialogs.showNoProjectError( title )
     return
 }
 		
 // Prompt for the old project
-def project_file = Dialogs.promptForFile(title, null, "Project (v0.1.4)", ".qpproj")
-if (project_file == null) return false
+def project_file = Dialogs.promptForFile( title, null, "Project (v0.1.4)", ".qpproj")
+if( project_file == null ) return false
 		    
 
 // Read the entries
@@ -20,43 +21,56 @@ def project_directory = project_file.getParent()
 println( "Getting Project from &project_directory" )
 
 def reader = new FileReader( project_file )
-def oldProject = GsonTools.getInstance().fromJson( reader, ProjectCommands.LegacyProject.class )
+def old_project = GsonTools.getInstance().fromJson( reader, ProjectCommands.LegacyProject.class )
 
 // Replace any instance of {$PROJECT_DIR} with the current project folder
-oldProject.getEntries().each{ entry ->
-    if( entry.path.contains( "{\$PROJECT_DIR}" )
-        entry.path = entry.path.replace("{\$PROJECT_DIR}", project_directory)
+old_project.getEntries().each{ entry ->
+    if( entry.path.contains( "{\$PROJECT_DIR}" ) )
+        entry.path = entry.path.replace( "{\$PROJECT_DIR}", project_directory )
     else 
         println( "Entry did not contain a relative Path" )
 }
 
 println( "Importing the following Images:" )
 
-oldProject.getEntries().each{ println("    "+it) }
+old_project.getEntries().each{ println("    "+it) }
 
-def dirData = new File( project_file.getParent(), "data" )
-if ( !dirData.exists() ) {
+def data_directory = new File( project_file.getParent(), "data" )
+if ( !data_directory.exists() ) {
     Dialogs.showErrorMessage(title, "No data directory found for the legacy project!")
     return
 }
-		
-def task = new ProjectCommands.LegacyProjectTask(project, oldProject.getEntries(), project_file.getParentFile())
+
+// Import the old project into the currently open one
+def task = new ProjectCommands.LegacyProjectTask( new_project, old_project.getEntries(), project_file.getParentFile() )
 Platform.runLater( task )
-def nImages = oldProject.getEntries().size()
+
+// Copy the scripts and results directories if they exist. Other folders must be copied manually. 
+def scripts_directory = new File( project_directory, "scripts" )
+def results_directory = new File( project_directory, "results" )
+if( scripts_directory.exists() ) {
+    println "Copying scripts Directory" 
+    def new_scripts_directory = new File ( new_project_directory, "scripts" )
+    FileUtils.copyDirectory( scripts_directory, new_scripts_directory )
+}
+
+if( results_directory.exists() ) {
+    println "Copying results Directory" 
+    def new_results_directory = new File ( new_project_directory, "results" )
+    FileUtils.copyDirectory( results_directory, new_results_directory )
+}
 
 try {
-    project.syncChanges()
+    new_project.syncChanges()
     //In case the user makes a mistake, make sure that each image has a unique name
-    project.images = project.images.toUnique{ it.getImageName() }
+    new_project.images = new_project.images.toUnique{ it.getImageName() }
 } catch (def e) {
     logger.error("Error syncing project: " + e.getLocalizedMessage(), e)
 }
     qupath.refreshProject()
     
-return
-
-
-
+println "Old project imported. Please make sure to copy any custom files or folders from your old project manually!"
 
 import qupath.lib.gui.commands.*
 import qupath.lib.gui.dialogs.Dialogs
+import org.apache.commons.io.FileUtils
