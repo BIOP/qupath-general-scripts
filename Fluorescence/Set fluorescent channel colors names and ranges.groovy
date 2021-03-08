@@ -15,8 +15,9 @@ def color4= getColorRGB( 255, 0, 128 )
 
 def colors = [ color1, color2, color3, color4 ]
 
+getCurrentImageData().removeProperty("qupath.lib.display.ImageDisplay");
 
-setChannelNames( *names ) // WOO I am the best
+setChannelNames( *names )
 
 setChannelColors( *colors )
 
